@@ -6,24 +6,30 @@ type FileInputProps = {
   onDrop: OnDrop;
   maxSize: number;
   isUploading: boolean;
+  maxFiles?: number;
 };
 
-const FileInput = ({ onDrop, maxSize, isUploading }: FileInputProps) => {
+const FileInput = ({
+  onDrop,
+  maxSize,
+  maxFiles = 1,
+  isUploading,
+}: FileInputProps) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       "image/*": [],
     },
     maxSize,
     onDrop,
+    maxFiles,
   });
 
   return (
-    <button
+    <div
       {...getRootProps()}
       className={`grid h-60 w-full min-w-full cursor-pointer place-items-center rounded-lg border-2 border-dashed p-2 text-center text-base text-gray-300 transition hover:bg-gray-700/80 disabled:cursor-not-allowed ${
         isDragActive ? "border-gray-500" : "border-gray-500"
       }`}
-      disabled={isUploading}
     >
       <input {...getInputProps()} />
       {isDragActive ? (
@@ -42,7 +48,7 @@ const FileInput = ({ onDrop, maxSize, isUploading }: FileInputProps) => {
           </p>
         </div>
       )}
-    </button>
+    </div>
   );
 };
 

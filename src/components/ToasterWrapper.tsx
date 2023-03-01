@@ -13,8 +13,8 @@ const ToasterWrapper = () => {
         className: "",
         duration: 3000,
         style: {
-          background: "#ffffff",
-          color: "#000000",
+          background: "#111827",
+          color: "#ffffff",
         },
       }}
     />

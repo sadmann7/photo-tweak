@@ -1,6 +1,10 @@
 import type { NextApiRequestReplicate, PredictionBody } from "@/types";
 import type { NextApiResponse } from "next";
 
+export const config = {
+  runtime: "edge",
+};
+
 export default async function handler(
   req: NextApiRequestReplicate,
   res: NextApiResponse

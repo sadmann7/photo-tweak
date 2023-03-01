@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Check } from "lucide-react";
 import Head from "next/head";
 import { useCallback, useEffect, useState } from "react";
-import { FileRejection } from "react-dropzone";
+import type { ErrorCode, FileRejection } from "react-dropzone";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
@@ -14,9 +14,15 @@ const schema = z.object({
   image: z.unknown().refine((v) => v instanceof File, {
     message: "Upload an image",
   }),
-  command: z.string().min(1, { message: "Enter a command" }),
+  command: z
+    .string()
+    .refine((v) => v.length > 0, {
+      message: "Enter a command",
+    })
+    .refine((v) => v.length >= 3, {
+      message: "Command must be at least 3 characters",
+    }),
 });
-
 type Inputs = z.infer<typeof schema>;
 
 export default function Home() {
@@ -32,15 +38,13 @@ export default function Home() {
 
   // react-hook-form
   const { register, handleSubmit, formState, watch, setValue } =
-    useForm<Inputs>({
-      resolver: zodResolver(schema),
-    });
+    useForm<Inputs>({ resolver: zodResolver(schema) });
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log(data);
     if (!(data.image instanceof File)) return;
     await uploadImage(data.image);
     if (!originalImage) return;
-    // await generateImage(originalImage.url, data.command);
+    await generateImage(originalImage.url, data.command);
     setIsUploading(false);
   };
 
@@ -54,14 +58,27 @@ export default function Home() {
         setPreviewImage(URL.createObjectURL(file));
       });
       rejectedFiles.forEach((file) => {
-        if (file.errors[0]?.code === "file-too-large") {
-          const size = Math.round(file.file.size / 1000000);
-          toast.error(
-            `Please upload a image smaller than 5MB. Current size: ${size}MB`
-          );
-        } else {
-          toast.error(toast.error(file.errors[0]?.message));
+        switch (file.errors[0]?.code as ErrorCode) {
+          case "file-invalid-type":
+            toast.error("Please select a valid image");
+            break;
+          case "file-too-large":
+            const size = Math.round(file.file.size / 1000000);
+            toast.error(
+              `Please select a image smaller than 5MB. Current size: ${size}MB`
+            );
+            break;
+          case "too-many-files":
+            toast.error("Please select only one image");
+            break;
+          default:
+            toast.error(file.errors[0]?.message);
+            break;
         }
+
+        setValue("image", null, {
+          shouldValidate: true,
+        });
       });
     },
     [setValue]
@@ -158,7 +175,7 @@ export default function Home() {
           </h1>
           <p className="text-center text-lg text-gray-300 sm:text-xl">
             Want to edit portrait with only text commands? Upload your photo and
-            add a text command to edit your portrait.
+            add a text command to edit your portrait
           </p>
         </div>
         <form
@@ -171,7 +188,7 @@ export default function Home() {
               htmlFor="image"
               className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
             >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-500/80 text-sm text-white sm:text-base">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
                 {watch("image") ? (
                   <Check aria-hidden="true" className="h-5 w-5" />
                 ) : (
@@ -185,7 +202,7 @@ export default function Home() {
               isUploading={isUploading}
               onDrop={onDrop}
             />
-            {formState.errors.image ? (
+            {formState.errors.image?.message ? (
               <div className="flex items-center gap-2 text-red-500">
                 <AlertCircle aria-hidden="true" className="h-4 w-4" />
                 <p className="text-sm font-medium">
@@ -199,8 +216,8 @@ export default function Home() {
               htmlFor="traget"
               className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
             >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-500/80 text-sm text-white sm:text-base">
-                {watch("command") ? (
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
+                {watch("command") && watch("command").length >= 3 ? (
                   <Check aria-hidden="true" className="h-5 w-5" />
                 ) : (
                   2
