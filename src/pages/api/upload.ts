@@ -5,7 +5,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const base64 = req.body.base64;
   const uploadedImage = await cloudinary.uploader.upload(base64, {
     resource_type: "image",
-    folder: "age-transition",
+    folder: "photo-tweak",
     transformation: [
       {
         width: 480,

@@ -1,4 +1,5 @@
 import { NextApiRequest } from "next";
+import type { DropEvent, FileRejection } from "react-dropzone";
 
 export interface NextApiRequestWithBody extends NextApiRequest {
   body: {
@@ -6,6 +7,19 @@ export interface NextApiRequestWithBody extends NextApiRequest {
     target: string;
   };
 }
+
+export type OriginalImage = {
+  name: string | null;
+  url: string;
+};
+
+export type OnDrop =
+  | (<T extends File>(
+      acceptedFiles: T[],
+      fileRejections: FileRejection[],
+      event: DropEvent
+    ) => void)
+  | undefined;
 
 export type UploadedFile = {
   secure_url: string;
