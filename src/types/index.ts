@@ -4,7 +4,7 @@ import type { DropEvent, FileRejection } from "react-dropzone";
 export interface NextApiRequestReplicate extends NextApiRequest {
   body: {
     imageUrl: string;
-    target: string;
+    command: string;
   };
 }
 
@@ -31,7 +31,18 @@ export type UploadedFile = {
   secure_url: string;
 };
 
-export type Prediction = {
+export type PredictionBody = {
+  version: string;
+  input: {
+    input: string;
+    neutral: string;
+    target: string;
+    manipulation_strength: number;
+    disentanglement_threshold: number;
+  };
+};
+
+export type PredictionResult = {
   completed_at: string;
   created_at: string;
   error: string | null;

@@ -1,11 +1,32 @@
-import { NextApiRequestReplicate } from "@/types";
+import type { NextApiRequestReplicate, PredictionBody } from "@/types";
 import type { NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequestReplicate,
   res: NextApiResponse
 ) {
-  const { imageUrl, target } = req.body;
+  const { imageUrl, command } = req.body;
+
+  const predictionBody: PredictionBody = {
+    version: "7af9a66f36f97fee2fece7dcc927551a951f0022cbdd23747b9212f23fc17021",
+    input: {
+      input: imageUrl,
+      // Neutral image description
+      neutral: "a face",
+      // Target image description
+      target: command,
+      // The higher the manipulation strength, the closer the generated image
+      // becomes to the target description. Negative values moves the
+      // generated image further from the target description
+      // Range: -10 to 10
+      manipulation_strength: 4.1,
+      // The higher the disentanglement threshold, the more specific the
+      // changes are to the target attribute. Lower values mean that broader
+      // changes are made to the input image
+      // Range: 0.08 to 0.3
+      disentanglement_threshold: 0.15,
+    },
+  };
 
   const response = await fetch("https://api.replicate.com/v1/predictions", {
     method: "POST",
@@ -14,25 +35,7 @@ export default async function handler(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      version:
-        "7af9a66f36f97fee2fece7dcc927551a951f0022cbdd23747b9212f23fc17021",
-      input: {
-        input: imageUrl,
-        // Neutral image description
-        neutral: "a face",
-        // Target image description
-        target,
-        // The higher the manipulation strength, the closer the generated image
-        // becomes to the target description. Negative values moves the
-        // generated image further from the target description
-        // Range: -10 to 10
-        manipulation_strength: 4.1,
-        // The higher the disentanglement threshold, the more specific the
-        // changes are to the target attribute. Lower values mean that broader
-        // changes are made to the input image
-        // Range: 0.08 to 0.3
-        disentanglement_threshold: 0.15,
-      },
+      ...predictionBody,
     }),
   });
 

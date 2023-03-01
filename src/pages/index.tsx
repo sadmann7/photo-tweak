@@ -1,6 +1,7 @@
 import Button from "@/components/Button";
 import FileInput from "@/components/FileInput";
-import type { OnDrop, OriginalImage, Prediction, UploadedFile } from "@/types";
+import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
+import { Check } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
@@ -10,7 +11,7 @@ import { toast } from "react-hot-toast";
 
 type Inputs = {
   image: File;
-  target: string;
+  command: string;
 };
 
 export default function Home() {
@@ -25,16 +26,17 @@ export default function Home() {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   // react-hook-form
-  const { register, handleSubmit, formState, setValue } = useForm<Inputs>();
+  const { register, handleSubmit, formState, watch, setValue } =
+    useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log(data);
     await uploadImage(data.image);
     if (!originalImage) return;
-    // await generateImage(originalImage.url, data.target);
+    // await generateImage(originalImage.url, data.command);
     setIsUploading(false);
   };
 
-  const onDrop: OnDrop = useCallback(
+  const onDrop = useCallback(
     async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       acceptedFiles.forEach(async (file) => {
         if (!file) return;
@@ -47,7 +49,7 @@ export default function Home() {
         if (file.errors[0]?.code === "file-too-large") {
           const size = Math.round(file.file.size / 1000000);
           toast.error(
-            `Please upload a image smaller than 1MB. Current size: ${size}MB`
+            `Please upload a image smaller than 5MB. Current size: ${size}MB`
           );
         } else {
           toast.error(toast.error(file.errors[0]?.message));
@@ -98,7 +100,7 @@ export default function Home() {
     };
   };
 
-  const generateImage = async (imageUrl: string, target: string) => {
+  const generateImage = async (imageUrl: string, command: string) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     setIsLoading(true);
     const response = await fetch("/api/predictions", {
@@ -108,10 +110,10 @@ export default function Home() {
       },
       body: JSON.stringify({
         imageUrl,
-        target,
+        command,
       }),
     });
-    let prediction: Prediction = await response.json();
+    let prediction: PredictionResult = await response.json();
 
     if (response.status !== 201) {
       toast.error(prediction.error);
@@ -141,7 +143,7 @@ export default function Home() {
       <Head>
         <title>PhotoTweak</title>
       </Head>
-      <main className="container mx-auto mt-32 mb-16 flex max-w-7xl flex-col items-center justify-center gap-10 px-6">
+      <main className="container mx-auto mt-32 mb-16 flex flex-col items-center justify-center gap-16 px-6">
         <div className="grid max-w-xl gap-5">
           <h1 className="text-center text-4xl font-bold leading-tight sm:text-6xl sm:leading-tight">
             Edit portraits from text commands
@@ -153,18 +155,29 @@ export default function Home() {
         </div>
         <form
           aria-label="add product form"
-          className="grid gap-5 whitespace-nowrap"
+          className="mx-auto grid w-full max-w-3xl gap-6"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <fieldset className="grid gap-2">
+          <fieldset className="grid gap-5">
             <label
               htmlFor="image"
-              className="text-title text-xs font-medium md:text-sm"
+              className="text-sm font-medium text-white sm:text-base"
             >
-              Upload your photo
+              <span className="mr-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-600/80 text-sm text-white sm:text-base">
+                {watch("image") ? (
+                  <Check aria-hidden="true" className="h-5 w-5" />
+                ) : (
+                  1
+                )}
+              </span>
+              Select your image
             </label>
-            {!previewImage ? (
-              <FileInput isUploading={isUploading} onDrop={onDrop} />
+            {watch("image") === undefined ? (
+              <FileInput
+                maxSize={5000000}
+                isUploading={isUploading}
+                onDrop={onDrop}
+              />
             ) : (
               <Image
                 src={previewImage}
@@ -175,34 +188,41 @@ export default function Home() {
               />
             )}
           </fieldset>
-          <fieldset className="grid gap-2">
+          <fieldset className="grid gap-5">
             <label
               htmlFor="traget"
-              className="text-title text-xs font-medium md:text-sm"
+              className="text-sm font-medium text-white sm:text-base"
             >
-              Text command
+              <span className="mr-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-600/80 text-sm text-white sm:text-base">
+                {watch("command") ? (
+                  <Check aria-hidden="true" className="h-5 w-5" />
+                ) : (
+                  2
+                )}
+              </span>
+              Add your command
             </label>
             <input
               type="text"
               id="target"
               className="w-full rounded-md border-gray-400 bg-transparent px-4 py-2.5 text-base text-gray-100 transition-colors placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Input command"
-              {...register("target", { required: true })}
+              placeholder="e.g. a face with black hair"
+              {...register("command", { required: true })}
             />
-            {formState.errors.target ? (
+            {formState.errors.command ? (
               <p className="text-danger text-sm font-medium">
-                {formState.errors.target.message}
+                {formState.errors.command.message}
               </p>
             ) : null}
           </fieldset>
           <Button
             aria-label="submit"
             className="w-full"
-            disabled={isUploading || isDownloading}
             isLoading={isLoading}
             loadingVariant="spinner"
+            disabled={isUploading || isLoading}
           >
-            Edit photo
+            Submit
           </Button>
         </form>
       </main>
