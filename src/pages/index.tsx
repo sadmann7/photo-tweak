@@ -7,10 +7,10 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>TextTweak</title>
+        <title>PhotoTweak</title>
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center py-2">
-        <h1 className="text-6xl font-bold">TextTweak</h1>
+        <h1 className="text-6xl font-bold">PhotoTweak</h1>
       </main>
     </>
   );

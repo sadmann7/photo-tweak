@@ -1,7 +1,7 @@
 const Footer = () => {
   return (
     <footer aria-label="footer">
-      <div className="grid place-items-center py-5">
+      <div className="grid place-items-center bg-gray-700/80 py-5">
         <h1 className="text-sm text-gray-300 sm:text-base">
           Powered by{" "}
           <a

@@ -7,5 +7,5 @@ html {
 }
 
 body {
-  @apply bg-neutral-800 text-neutral-100;
+  @apply bg-gray-800 text-gray-100;
 }
