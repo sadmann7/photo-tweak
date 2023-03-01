@@ -1,12 +1,8 @@
-import { NextApiRequestWithBody } from "@/types";
+import { NextApiRequestReplicate } from "@/types";
 import type { NextApiResponse } from "next";
 
-export const config = {
-  runtime: "edge",
-};
-
 export default async function handler(
-  req: NextApiRequestWithBody,
+  req: NextApiRequestReplicate,
   res: NextApiResponse
 ) {
   const { imageUrl, target } = req.body;
@@ -21,7 +17,7 @@ export default async function handler(
       version:
         "7af9a66f36f97fee2fece7dcc927551a951f0022cbdd23747b9212f23fc17021",
       input: {
-        image: imageUrl,
+        input: imageUrl,
         // Neutral image description
         neutral: "a face",
         // Target image description

@@ -1,7 +1,8 @@
+import { NextApiRequestCloudinary } from "@/types";
 import { cloudinary } from "@/utils/cloudinary";
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiResponse } from "next";
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: NextApiRequestCloudinary, res: NextApiResponse) => {
   const base64 = req.body.base64;
   const uploadedImage = await cloudinary.uploader.upload(base64, {
     resource_type: "image",

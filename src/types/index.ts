@@ -1,15 +1,21 @@
 import { NextApiRequest } from "next";
 import type { DropEvent, FileRejection } from "react-dropzone";
 
-export interface NextApiRequestWithBody extends NextApiRequest {
+export interface NextApiRequestReplicate extends NextApiRequest {
   body: {
     imageUrl: string;
     target: string;
   };
 }
 
+export interface NextApiRequestCloudinary extends NextApiRequest {
+  body: {
+    base64: string;
+  };
+}
+
 export type OriginalImage = {
-  name: string | null;
+  name: string;
   url: string;
 };
 

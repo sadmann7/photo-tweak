@@ -1,14 +1,12 @@
 import Button from "@/components/Button";
 import FileInput from "@/components/FileInput";
 import type { OnDrop, OriginalImage, Prediction, UploadedFile } from "@/types";
-import { Inter } from "next/font/google";
 import Head from "next/head";
-import { useCallback, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 import { FileRejection } from "react-dropzone";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
-
-const inter = Inter({ subsets: ["latin"] });
 
 type Inputs = {
   image: File;
@@ -16,6 +14,7 @@ type Inputs = {
 };
 
 export default function Home() {
+  const [previewImage, setPreviewImage] = useState<string>("");
   const [originalImage, setOriginalImage] = useState<OriginalImage | null>(
     null
   );
@@ -26,13 +25,13 @@ export default function Home() {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   // react-hook-form
-  const { register, handleSubmit, formState, setValue, watch } =
-    useForm<Inputs>();
+  const { register, handleSubmit, formState, setValue } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log(data);
-    if (!originalImage) return;
     await uploadImage(data.image);
-    // generateImage(originalImage.url, data.target);
+    if (!originalImage) return;
+    // await generateImage(originalImage.url, data.target);
+    setIsUploading(false);
   };
 
   const onDrop: OnDrop = useCallback(
@@ -42,10 +41,7 @@ export default function Home() {
         setValue("image", file, {
           shouldValidate: true,
         });
-        setOriginalImage({
-          name: file.name,
-          url: URL.createObjectURL(file),
-        });
+        setPreviewImage(URL.createObjectURL(file));
       });
       rejectedFiles.forEach((file) => {
         if (file.errors[0]?.code === "file-too-large") {
@@ -60,6 +56,11 @@ export default function Home() {
     },
     [setValue]
   );
+
+  useEffect(() => {
+    if (!previewImage) return;
+    return () => URL.revokeObjectURL(previewImage);
+  }, [previewImage]);
 
   const uploadImage = async (image: File) => {
     setIsUploading(true);
@@ -90,7 +91,7 @@ export default function Home() {
 
       if (!data) return;
       setOriginalImage({
-        name: null,
+        name: image.name,
         url: data.secure_url,
       });
       setIsUploading(false);
@@ -107,6 +108,7 @@ export default function Home() {
       },
       body: JSON.stringify({
         imageUrl,
+        target,
       }),
     });
     let prediction: Prediction = await response.json();
@@ -140,7 +142,7 @@ export default function Home() {
         <title>PhotoTweak</title>
       </Head>
       <main className="container mx-auto mt-32 mb-16 flex max-w-7xl flex-col items-center justify-center gap-10 px-6">
-        <div className="grid max-w-xl gap-6">
+        <div className="grid max-w-xl gap-5">
           <h1 className="text-center text-4xl font-bold leading-tight sm:text-6xl sm:leading-tight">
             Edit portraits from text commands
           </h1>
@@ -161,8 +163,17 @@ export default function Home() {
             >
               Upload your photo
             </label>
-
-            <FileInput isUploading={isUploading} onDrop={onDrop} />
+            {!previewImage ? (
+              <FileInput isUploading={isUploading} onDrop={onDrop} />
+            ) : (
+              <Image
+                src={previewImage}
+                alt="preview"
+                width={500}
+                height={500}
+                loading="eager"
+              />
+            )}
           </fieldset>
           <fieldset className="grid gap-2">
             <label
