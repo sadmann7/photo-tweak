@@ -1,18 +1,23 @@
 import Button from "@/components/Button";
 import FileInput from "@/components/FileInput";
 import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
-import { Check } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, Check } from "lucide-react";
 import Head from "next/head";
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { FileRejection } from "react-dropzone";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
+import { z } from "zod";
 
-type Inputs = {
-  image: File;
-  command: string;
-};
+const schema = z.object({
+  image: z.unknown().refine((v) => v instanceof File, {
+    message: "Upload an image",
+  }),
+  command: z.string().min(1, { message: "Enter a command" }),
+});
+
+type Inputs = z.infer<typeof schema>;
 
 export default function Home() {
   const [previewImage, setPreviewImage] = useState<string>("");
@@ -27,9 +32,12 @@ export default function Home() {
 
   // react-hook-form
   const { register, handleSubmit, formState, watch, setValue } =
-    useForm<Inputs>();
+    useForm<Inputs>({
+      resolver: zodResolver(schema),
+    });
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log(data);
+    if (!(data.image instanceof File)) return;
     await uploadImage(data.image);
     if (!originalImage) return;
     // await generateImage(originalImage.url, data.command);
@@ -155,15 +163,15 @@ export default function Home() {
         </div>
         <form
           aria-label="add product form"
-          className="mx-auto grid w-full max-w-3xl gap-6"
+          className="mx-auto grid w-full max-w-xl gap-6"
           onSubmit={handleSubmit(onSubmit)}
         >
           <fieldset className="grid gap-5">
             <label
               htmlFor="image"
-              className="text-sm font-medium text-white sm:text-base"
+              className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
             >
-              <span className="mr-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-600/80 text-sm text-white sm:text-base">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-500/80 text-sm text-white sm:text-base">
                 {watch("image") ? (
                   <Check aria-hidden="true" className="h-5 w-5" />
                 ) : (
@@ -172,28 +180,26 @@ export default function Home() {
               </span>
               Select your image
             </label>
-            {watch("image") === undefined ? (
-              <FileInput
-                maxSize={5000000}
-                isUploading={isUploading}
-                onDrop={onDrop}
-              />
-            ) : (
-              <Image
-                src={previewImage}
-                alt="preview"
-                width={500}
-                height={500}
-                loading="eager"
-              />
-            )}
+            <FileInput
+              maxSize={5000000}
+              isUploading={isUploading}
+              onDrop={onDrop}
+            />
+            {formState.errors.image ? (
+              <div className="flex items-center gap-2 text-red-500">
+                <AlertCircle aria-hidden="true" className="h-4 w-4" />
+                <p className="text-sm font-medium">
+                  {formState.errors.image.message}
+                </p>
+              </div>
+            ) : null}
           </fieldset>
           <fieldset className="grid gap-5">
             <label
               htmlFor="traget"
-              className="text-sm font-medium text-white sm:text-base"
+              className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
             >
-              <span className="mr-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-600/80 text-sm text-white sm:text-base">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-500/80 text-sm text-white sm:text-base">
                 {watch("command") ? (
                   <Check aria-hidden="true" className="h-5 w-5" />
                 ) : (
@@ -210,9 +216,12 @@ export default function Home() {
               {...register("command", { required: true })}
             />
             {formState.errors.command ? (
-              <p className="text-danger text-sm font-medium">
-                {formState.errors.command.message}
-              </p>
+              <div className="flex items-center gap-2 text-red-500">
+                <AlertCircle aria-hidden="true" className="h-4 w-4" />
+                <p className="text-sm font-medium">
+                  {formState.errors.command.message}
+                </p>
+              </div>
             ) : null}
           </fieldset>
           <Button

@@ -7,7 +7,7 @@ const navLinks = [
   {
     name: "Github",
     icon: <Github aria-hidden="true" className="h-6 w-6" />,
-    href: "https://github.com/sadmann7/game-rec.git",
+    href: "https://github.com/sadmann7/photo-tweak",
     isExternal: true,
   },
 ];
@@ -33,14 +33,14 @@ const Header = () => {
   return (
     <header
       aria-label="header"
-      className={`fixed top-0 left-0 z-20 flex w-full items-center gap-4 ${
+      className={`fixed top-0 left-0 z-20 flex w-full items-center gap-4 transition ${
         isScrolled
-          ? "bg-gray-700/80 shadow-md backdrop-blur-md backdrop-saturate-150 backdrop-filter transition-all duration-300 ease-in-out"
-          : "bg-transparent"
+          ? "bg-gray-700/80 shadow-md backdrop-blur-md backdrop-saturate-150 backdrop-filter duration-300 ease-in-out"
+          : "bg-gray-700"
       }`}
       onScroll={handleScroll}
     >
-      <nav className="container mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      <nav className="container mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link
           aria-label="navigate to home page"
           href="/"
