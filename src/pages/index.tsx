@@ -1,10 +1,11 @@
 import Button from "@/components/Button";
 import FileInput from "@/components/FileInput";
-import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
+import type { PredictionResult, UploadedFile } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Check } from "lucide-react";
+import { AlertCircle, Check, CheckCircle } from "lucide-react";
 import Head from "next/head";
-import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ErrorCode, FileRejection } from "react-dropzone";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -26,15 +27,14 @@ const schema = z.object({
 type Inputs = z.infer<typeof schema>;
 
 export default function Home() {
-  const [previewImage, setPreviewImage] = useState<string>("");
-  const [originalImage, setOriginalImage] = useState<OriginalImage | null>(
-    null
-  );
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [imageName, setImageName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [generatedLoaded, setGeneratedLoaded] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const imageFieldRef = useRef<HTMLFieldSetElement>(null);
 
   // react-hook-form
   const { register, handleSubmit, formState, watch, setValue } =
@@ -42,10 +42,8 @@ export default function Home() {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log(data);
     if (!(data.image instanceof File)) return;
-    await uploadImage(data.image);
-    if (!originalImage) return;
-    await generateImage(originalImage.url, data.command);
-    setIsUploading(false);
+    setImageName(data.image.name);
+    await uploadImage(data.image, data.command);
   };
 
   const onDrop = useCallback(
@@ -56,8 +54,15 @@ export default function Home() {
           shouldValidate: true,
         });
         setPreviewImage(URL.createObjectURL(file));
+        if (!imageFieldRef.current) return;
+        imageFieldRef.current.scrollIntoView({ behavior: "smooth" });
       });
       rejectedFiles.forEach((file) => {
+        setValue("image", null, {
+          shouldValidate: true,
+        });
+        setPreviewImage(null);
+
         switch (file.errors[0]?.code as ErrorCode) {
           case "file-invalid-type":
             toast.error("Please select a valid image");
@@ -75,10 +80,6 @@ export default function Home() {
             toast.error(file.errors[0]?.message);
             break;
         }
-
-        setValue("image", null, {
-          shouldValidate: true,
-        });
       });
     },
     [setValue]
@@ -89,7 +90,7 @@ export default function Home() {
     return () => URL.revokeObjectURL(previewImage);
   }, [previewImage]);
 
-  const uploadImage = async (image: File) => {
+  const uploadImage = async (image: File, command: string) => {
     setIsUploading(true);
     const reader = new FileReader();
     reader.readAsDataURL(image);
@@ -114,18 +115,15 @@ export default function Home() {
         toast.error("Server error");
         setIsUploading(false);
       }
-      const data: UploadedFile = await response.json();
-
-      if (!data) return;
-      setOriginalImage({
-        name: image.name,
-        url: data.secure_url,
-      });
+      const uploadedFile: UploadedFile = await response.json();
+      if (!uploadedFile) return;
       setIsUploading(false);
+      setIsLoading(false);
+      generateImage(uploadedFile.secure_url, command);
     };
   };
 
-  const generateImage = async (imageUrl: string, command: string) => {
+  const generateImage = async (image: string, command: string) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     setIsLoading(true);
     const response = await fetch("/api/predictions", {
@@ -134,7 +132,7 @@ export default function Home() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        imageUrl,
+        image,
         command,
       }),
     });
@@ -171,19 +169,19 @@ export default function Home() {
       <main className="container mx-auto mt-32 mb-16 flex flex-col items-center justify-center gap-16 px-6">
         <div className="grid max-w-xl gap-5">
           <h1 className="text-center text-4xl font-bold leading-tight sm:text-6xl sm:leading-tight">
-            Edit portraits from text commands
+            Edit portraits with text commands
           </h1>
           <p className="text-center text-lg text-gray-300 sm:text-xl">
-            Want to edit portrait with only text commands? Upload your photo and
-            add a text command to edit your portrait
+            Want to edit portrait with only text commands? Upload your portrait
+            and edit it with text commands
           </p>
         </div>
         <form
-          aria-label="add product form"
+          aria-label="edit photo form"
           className="mx-auto grid w-full max-w-xl gap-6"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <fieldset className="grid gap-5">
+          <fieldset className="grid gap-5" ref={imageFieldRef}>
             <label
               htmlFor="image"
               className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
@@ -197,11 +195,43 @@ export default function Home() {
               </span>
               Select your image
             </label>
-            <FileInput
-              maxSize={5000000}
-              isUploading={isUploading}
-              onDrop={onDrop}
-            />
+            {!previewImage ? (
+              <FileInput
+                maxSize={5000000}
+                isUploading={isUploading}
+                onDrop={onDrop}
+              />
+            ) : (
+              <div className="group relative mx-auto aspect-square w-full max-w-[30rem] rounded-lg">
+                <div className="absolute inset-0 bg-gray-900 opacity-0 transition-opacity group-hover:opacity-80" />
+                <div className="absolute inset-0 flex h-full w-full items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle aria-hidden="true" className="h-4 w-4" />
+                      <p className="text-base font-medium">Image selected</p>
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      Click here to select another image or drag and drop
+                    </p>
+                  </div>
+                </div>
+                <div className="opacity-0">
+                  <FileInput
+                    maxSize={5000000}
+                    isUploading={isUploading}
+                    onDrop={onDrop}
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+                <Image
+                  src={previewImage}
+                  alt="preview"
+                  width={480}
+                  height={480}
+                  className="aspect-square w-[30rem] rounded-lg object-cover"
+                />
+              </div>
+            )}
             {formState.errors.image?.message ? (
               <div className="flex items-center gap-2 text-red-500">
                 <AlertCircle aria-hidden="true" className="h-4 w-4" />
@@ -213,7 +243,7 @@ export default function Home() {
           </fieldset>
           <fieldset className="grid gap-5">
             <label
-              htmlFor="traget"
+              htmlFor="command"
               className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
             >
               <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
@@ -244,7 +274,7 @@ export default function Home() {
           <Button
             aria-label="submit"
             className="w-full"
-            isLoading={isLoading}
+            isLoading={isUploading || isLoading}
             loadingVariant="spinner"
             disabled={isUploading || isLoading}
           >

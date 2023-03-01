@@ -7,6 +7,7 @@ type FileInputProps = {
   maxSize: number;
   isUploading: boolean;
   maxFiles?: number;
+  className?: string;
 };
 
 const FileInput = ({
@@ -14,6 +15,7 @@ const FileInput = ({
   maxSize,
   maxFiles = 1,
   isUploading,
+  className,
 }: FileInputProps) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -29,7 +31,7 @@ const FileInput = ({
       {...getRootProps()}
       className={`grid h-60 w-full min-w-full cursor-pointer place-items-center rounded-lg border-2 border-dashed p-2 text-center text-base text-gray-300 transition hover:bg-gray-700/80 disabled:cursor-not-allowed ${
         isDragActive ? "border-gray-500" : "border-gray-500"
-      }`}
+      } ${className ?? ""}}`}
     >
       <input {...getInputProps()} />
       {isDragActive ? (
@@ -42,7 +44,9 @@ const FileInput = ({
       ) : (
         <div className="grid place-items-center gap-2 px-10">
           <DownloadCloud aria-hidden="true" className="h-8 w-8" />
-          <p>Drag {`'n'`} drop image here, or click to select image</p>
+          <p className="font-medium">
+            Drag {`'n'`} drop image here, or click to select image
+          </p>
           <p className="text-sm text-gray-400">
             Please upload image with size less than 5MB
           </p>

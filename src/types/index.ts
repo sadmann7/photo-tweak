@@ -3,7 +3,7 @@ import type { DropEvent, FileRejection } from "react-dropzone";
 
 export interface NextApiRequestReplicate extends NextApiRequest {
   body: {
-    imageUrl: string;
+    image: string;
     command: string;
   };
 }
@@ -14,7 +14,7 @@ export interface NextApiRequestCloudinary extends NextApiRequest {
   };
 }
 
-export type OriginalImage = {
+export type UploadedImage = {
   name: string;
   url: string;
 };
