@@ -1,4 +1,4 @@
-import { NextApiRequest } from "next";
+import type { NextApiRequest } from "next";
 import type { DropEvent, FileRejection } from "react-dropzone";
 
 // next api request
@@ -30,7 +30,9 @@ export type OnDrop =
   | undefined;
 
 export type UploadedFile = {
-  secure_url: string;
+  publicId: string;
+  secureUrl: string;
+  createdAt: string;
 };
 
 // replicate prediction

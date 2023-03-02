@@ -1,8 +1,13 @@
-import Button from "@/components/Button";
 import DemoModal from "@/components/DemoModal";
-import FileInput from "@/components/FileInput";
 import ImageTabs from "@/components/ImageTabs";
-import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
+import Button from "@/components/ui/Button";
+import FileInput from "@/components/ui/FileInput";
+import SkeletonLoading from "@/components/ui/SkeletonLoading";
+import type {
+  OriginalImage,
+  PredictionResult,
+  UploadedFile,
+} from "@/types/globals";
 import { downloadFile } from "@/utils/download";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -15,7 +20,7 @@ import {
 } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { ErrorCode, FileRejection } from "react-dropzone";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -137,13 +142,13 @@ export default function Home() {
       if (!uploadedFile) return;
       setOriginalImage({
         name: image.name,
-        url: uploadedFile.secure_url,
+        url: uploadedFile.secureUrl,
       });
       // TODO: remove setGeneratedImage
-      setGeneratedImage(uploadedFile.secure_url);
+      setGeneratedImage(uploadedFile.secureUrl);
       setIsUploading(false);
       setIsLoading(false);
-      generateImage(uploadedFile.secure_url, command);
+      generateImage(uploadedFile.secureUrl, command);
     };
   };
 
@@ -199,7 +204,7 @@ export default function Home() {
       name: "Original",
       content: (
         <Image
-          src={originalImage?.url ?? ""}
+          src={originalImage?.url ?? "/images/placeholder.webp"}
           alt="original"
           width={576}
           height={576}
@@ -210,7 +215,17 @@ export default function Home() {
     },
     {
       name: "Edited",
-      content: (
+      content: isLoading ? (
+        <div className="relative aspect-square rounded-md">
+          <SkeletonLoading />
+          <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform text-center">
+            <p className="text-2xl font-bold text-gray-100">
+              Generating image...
+            </p>
+            <p className="text-sm text-gray-200">This may take a few minutes</p>
+          </div>
+        </div>
+      ) : (
         <div className="relative">
           <div className="absolute top-3 right-3 z-10 flex transform items-center gap-2">
             <button
@@ -259,7 +274,7 @@ export default function Home() {
             </button>
           </div>
           <Image
-            src={generatedImage ?? ""}
+            src={generatedImage ?? "/images/placeholder.webp"}
             alt="edited"
             width={576}
             height={576}
@@ -277,130 +292,144 @@ export default function Home() {
         <title>PhotoTweak</title>
       </Head>
       <main className="container mx-auto mt-32 mb-16 flex flex-col items-center justify-center gap-12 px-6">
-        <div className="grid max-w-xl place-items-center gap-5">
-          <h1 className="text-center text-4xl font-bold leading-tight text-gray-50 sm:text-6xl sm:leading-tight">
-            Edit portraits with text commands
-          </h1>
-          <p className="text-center text-lg text-gray-300 sm:text-xl">
-            Want to edit portrait with only text commands? Upload your portrait
-            and edit it with text commands
-          </p>
-          <DemoModal isOpen={isOpen} setIsOpen={setIsOpen} />
-        </div>
         {generatedImage ? (
-          <div ref={imageTabsRef}>
-            <ImageTabs
-              selectedIndex={selectedIndex}
-              setSelectedIndex={setSelectedIndex}
-              tabs={tabs}
-            />
-          </div>
+          <Fragment>
+            <div className="grid max-w-xl place-items-center gap-5">
+              <h1 className="text-center text-4xl font-bold leading-tight text-gray-50 sm:text-6xl sm:leading-tight">
+                Your edited photo
+              </h1>
+              <p className="text-center text-lg text-gray-400 sm:text-xl">
+                Your photos will be deleted from our server after 4 hours
+              </p>
+            </div>
+            <div ref={imageTabsRef} className="w-full max-w-xl">
+              <ImageTabs
+                selectedIndex={selectedIndex}
+                setSelectedIndex={setSelectedIndex}
+                tabs={tabs}
+              />
+            </div>
+          </Fragment>
         ) : (
-          <form
-            aria-label="edit photo form"
-            className="mx-auto grid w-full max-w-xl gap-6"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <fieldset className="grid gap-5" ref={imageFieldRef}>
-              <label
-                htmlFor="image"
-                className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
-              >
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
-                  {watch("image") ? (
-                    <Check aria-hidden="true" className="h-5 w-5" />
-                  ) : (
-                    1
-                  )}
-                </span>
-                Select your image
-              </label>
-              {!previewImage ? (
-                <FileInput
-                  maxSize={4 * 1024 * 1024}
-                  isUploading={isUploading}
-                  onDrop={onDrop}
-                />
-              ) : (
-                <div className="group relative mx-auto aspect-square w-full max-w-[30rem] rounded-lg">
-                  <div className="absolute inset-0 bg-gray-900 opacity-0 transition-opacity group-hover:opacity-80" />
-                  <div className="absolute inset-0 flex h-full w-full items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle aria-hidden="true" className="h-4 w-4" />
-                        <p className="text-base font-medium">Image selected</p>
+          <Fragment>
+            <div className="grid max-w-xl place-items-center gap-5">
+              <h1 className="text-center text-4xl font-bold leading-tight text-gray-50 sm:text-6xl sm:leading-tight">
+                Edit portraits with text commands
+              </h1>
+              <p className="text-center text-lg text-gray-400 sm:text-xl">
+                Want to edit portrait with only text commands? Upload your
+                portrait and edit it with text commands
+              </p>
+              <DemoModal isOpen={isOpen} setIsOpen={setIsOpen} />
+            </div>
+            <form
+              aria-label="edit photo form"
+              className="mx-auto grid w-full max-w-xl gap-6"
+              onSubmit={handleSubmit(onSubmit)}
+            >
+              <fieldset className="grid gap-5" ref={imageFieldRef}>
+                <label
+                  htmlFor="image"
+                  className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
+                >
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
+                    {watch("image") ? (
+                      <Check aria-hidden="true" className="h-5 w-5" />
+                    ) : (
+                      1
+                    )}
+                  </span>
+                  Select your image
+                </label>
+                {!previewImage ? (
+                  <FileInput
+                    maxSize={4 * 1024 * 1024}
+                    isUploading={isUploading}
+                    onDrop={onDrop}
+                  />
+                ) : (
+                  <div className="group relative mx-auto aspect-square w-full max-w-[30rem] rounded-lg">
+                    <div className="absolute inset-0 bg-gray-900 opacity-0 transition-opacity group-hover:opacity-80" />
+                    <div className="absolute inset-0 flex h-full w-full items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle aria-hidden="true" className="h-4 w-4" />
+                          <p className="text-base font-medium">
+                            Image selected
+                          </p>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                          Click to select another image, or drag and drop
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-400">
-                        Click to select another image, or drag and drop
-                      </p>
                     </div>
-                  </div>
-                  <div className="opacity-0">
-                    <FileInput
-                      maxSize={4 * 1024 * 1024}
-                      isUploading={isUploading}
-                      onDrop={onDrop}
-                      className="absolute inset-0 h-full w-full"
+                    <div className="opacity-0">
+                      <FileInput
+                        maxSize={4 * 1024 * 1024}
+                        isUploading={isUploading}
+                        onDrop={onDrop}
+                        className="absolute inset-0 h-full w-full"
+                      />
+                    </div>
+                    <Image
+                      src={previewImage}
+                      alt="preview"
+                      width={480}
+                      height={480}
+                      className="aspect-square w-[30rem] rounded-lg object-cover"
                     />
                   </div>
-                  <Image
-                    src={previewImage}
-                    alt="preview"
-                    width={480}
-                    height={480}
-                    className="aspect-square w-[30rem] rounded-lg object-cover"
-                  />
-                </div>
-              )}
-              {formState.errors.image?.message ? (
-                <div className="flex items-center gap-2 text-red-500">
-                  <AlertCircle aria-hidden="true" className="h-4 w-4" />
-                  <p className="text-sm font-medium">
-                    {formState.errors.image.message}
-                  </p>
-                </div>
-              ) : null}
-            </fieldset>
-            <fieldset className="grid gap-5">
-              <label
-                htmlFor="command"
-                className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
+                )}
+                {formState.errors.image?.message ? (
+                  <div className="flex items-center gap-2 text-red-500">
+                    <AlertCircle aria-hidden="true" className="h-4 w-4" />
+                    <p className="text-sm font-medium">
+                      {formState.errors.image.message}
+                    </p>
+                  </div>
+                ) : null}
+              </fieldset>
+              <fieldset className="grid gap-5">
+                <label
+                  htmlFor="command"
+                  className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
+                >
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
+                    {watch("command") && watch("command").length >= 3 ? (
+                      <Check aria-hidden="true" className="h-5 w-5" />
+                    ) : (
+                      2
+                    )}
+                  </span>
+                  Add your command
+                </label>
+                <input
+                  type="text"
+                  id="target"
+                  className="w-full rounded-md border-gray-400 bg-transparent px-4 py-2.5 text-base text-gray-100 transition-colors placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. a face with black hair"
+                  {...register("command", { required: true })}
+                />
+                {formState.errors.command ? (
+                  <div className="flex items-center gap-2 text-red-500">
+                    <AlertCircle aria-hidden="true" className="h-4 w-4" />
+                    <p className="text-sm font-medium">
+                      {formState.errors.command.message}
+                    </p>
+                  </div>
+                ) : null}
+              </fieldset>
+              <Button
+                aria-label="submit"
+                className="w-full"
+                isLoading={isUploading || isLoading}
+                loadingVariant="spinner"
+                disabled={isUploading || isLoading}
               >
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
-                  {watch("command") && watch("command").length >= 3 ? (
-                    <Check aria-hidden="true" className="h-5 w-5" />
-                  ) : (
-                    2
-                  )}
-                </span>
-                Add your command
-              </label>
-              <input
-                type="text"
-                id="target"
-                className="w-full rounded-md border-gray-400 bg-transparent px-4 py-2.5 text-base text-gray-100 transition-colors placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g. a face with black hair"
-                {...register("command", { required: true })}
-              />
-              {formState.errors.command ? (
-                <div className="flex items-center gap-2 text-red-500">
-                  <AlertCircle aria-hidden="true" className="h-4 w-4" />
-                  <p className="text-sm font-medium">
-                    {formState.errors.command.message}
-                  </p>
-                </div>
-              ) : null}
-            </fieldset>
-            <Button
-              aria-label="submit"
-              className="w-full"
-              isLoading={isUploading || isLoading}
-              loadingVariant="spinner"
-              disabled={isUploading || isLoading}
-            >
-              Submit
-            </Button>
-          </form>
+                Submit
+              </Button>
+            </form>
+          </Fragment>
         )}
       </main>
     </>

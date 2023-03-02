@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import LoadingDots from "./LoadingDots";
 
 type ButtonProps = {
-  variant?: "primary" | "secondary" | "tertiary";
+  variant?: "primary" | "secondary";
   isLoading?: boolean;
   loadingVariant?: "spinner" | "dots";
 } & DetailedHTMLProps<
@@ -15,7 +15,7 @@ type ButtonProps = {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      className,
+      className = "",
       variant = "primary",
       isLoading = false,
       loadingVariant = "spinner",
@@ -28,12 +28,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={`${
           variant === "primary"
             ? "bg-violet-600 text-white enabled:hover:bg-violet-700 enabled:active:bg-violet-600"
-            : variant === "secondary"
-            ? "bg-gray-500 text-white enabled:hover:bg-gray-600 enabled:active:bg-gray-500"
-            : "bg-gray-200 text-gray-900 enabled:hover:bg-gray-300 enabled:active:bg-gray-200"
-        } flex h-10 w-full items-center justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500 focus:ring-offset-1 focus:ring-offset-violet-100 disabled:cursor-not-allowed disabled:bg-opacity-60 ${
-          className ?? ""
-        }`}
+            : "bg-gray-500 text-white enabled:hover:bg-gray-600 enabled:active:bg-gray-500"
+        } flex h-10 w-full items-center justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500 focus:ring-offset-1 focus:ring-offset-violet-100 disabled:cursor-not-allowed disabled:bg-opacity-60 ${className}`}
         ref={ref}
         {...props}
       >

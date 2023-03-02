@@ -1,4 +1,4 @@
-import ToasterWrapper from "@/components/ToasterWrapper";
+import ToasterWrapper from "@/components/ui/ToasterWrapper";
 import DefaultLayout from "@/layouts/DefaultLayout";
 import "@/styles/globals.css";
 import type { NextPage } from "next";

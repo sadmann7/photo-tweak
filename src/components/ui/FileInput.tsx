@@ -1,4 +1,4 @@
-import type { OnDrop } from "@/types";
+import type { OnDrop } from "@/types/globals";
 import { DownloadCloud, Loader2 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 

@@ -1,4 +1,4 @@
-import { NextApiRequestCloudinary } from "@/types";
+import type { NextApiRequestCloudinary } from "@/types/globals";
 import { cloudinary } from "@/utils/cloudinary";
 import type { NextApiResponse } from "next";
 
@@ -10,7 +10,10 @@ export const config = {
   },
 };
 
-const handler = async (req: NextApiRequestCloudinary, res: NextApiResponse) => {
+export default async function handler(
+  req: NextApiRequestCloudinary,
+  res: NextApiResponse
+) {
   const base64 = req.body.base64;
   const uploadedImage = await cloudinary.uploader.upload(base64, {
     resource_type: "image",
@@ -24,7 +27,11 @@ const handler = async (req: NextApiRequestCloudinary, res: NextApiResponse) => {
       },
     ],
   });
-  res.status(200).json({ secure_url: uploadedImage.secure_url });
+  res.status(200).json({
+    publicId: uploadedImage.public_id,
+    secureUrl: uploadedImage.secure_url,
+    createdAt: uploadedImage.created_at,
+  });
 
   if (uploadedImage) {
     setTimeout(async () => {
@@ -34,6 +41,4 @@ const handler = async (req: NextApiRequestCloudinary, res: NextApiResponse) => {
       });
     }, 4 * 60 * 60 * 1000);
   }
-};
-
-export default handler;
+}

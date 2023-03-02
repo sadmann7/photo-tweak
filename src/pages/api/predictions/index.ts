@@ -1,4 +1,4 @@
-import type { NextApiRequestReplicate, PredictionBody } from "@/types";
+import type { NextApiRequestReplicate, PredictionBody } from "@/types/globals";
 import type { NextApiResponse } from "next";
 
 // export const config = {
