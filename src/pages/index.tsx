@@ -83,9 +83,9 @@ export default function Home() {
             toast.error("Please select a valid image");
             break;
           case "file-too-large":
-            const size = Math.round(file.file.size / 1000000);
+            const size = (file.file.size / 1024 / 1024).toFixed(2);
             toast.error(
-              `Please select a image smaller than 5MB. Current size: ${size}MB`
+              `Please select a image smaller than 4MB. Current size: ${size}MB`
             );
             break;
           case "too-many-files":
@@ -314,7 +314,7 @@ export default function Home() {
               </label>
               {!previewImage ? (
                 <FileInput
-                  maxSize={5000000}
+                  maxSize={4 * 1024 * 1024}
                   isUploading={isUploading}
                   onDrop={onDrop}
                 />
@@ -334,7 +334,7 @@ export default function Home() {
                   </div>
                   <div className="opacity-0">
                     <FileInput
-                      maxSize={5000000}
+                      maxSize={4 * 1024 * 1024}
                       isUploading={isUploading}
                       onDrop={onDrop}
                       className="absolute inset-0 h-full w-full"

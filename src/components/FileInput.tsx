@@ -48,7 +48,8 @@ const FileInput = ({
             Drag {`'n'`} drop image here, or click to select image
           </p>
           <p className="text-sm text-gray-400">
-            Please upload image with size less than 5MB
+            Please upload image with size less than{" "}
+            {Math.round(maxSize / 1000000)}MB
           </p>
         </div>
       )}
