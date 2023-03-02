@@ -9,10 +9,10 @@ const handler = async (req: NextApiRequestCloudinary, res: NextApiResponse) => {
     folder: "photo-tweak",
     transformation: [
       {
-        width: 480,
-        height: 480,
+        width: 600,
+        height: 600,
         crop: "fill",
-        quality: 80,
+        quality: 90,
       },
     ],
   });

@@ -14,7 +14,7 @@ export interface NextApiRequestCloudinary extends NextApiRequest {
   };
 }
 
-export type UploadedImage = {
+export type OriginalImage = {
   name: string;
   url: string;
 };

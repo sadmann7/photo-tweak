@@ -1,6 +1,7 @@
 import Button from "@/components/Button";
 import FileInput from "@/components/FileInput";
-import type { PredictionResult, UploadedFile } from "@/types";
+import ImageTabs from "@/components/ImageTabs";
+import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Check, CheckCircle } from "lucide-react";
 import Head from "next/head";
@@ -28,12 +29,15 @@ type Inputs = z.infer<typeof schema>;
 
 export default function Home() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [imageName, setImageName] = useState<string | null>(null);
+  const [originalImage, setOriginalImage] = useState<OriginalImage | null>(
+    null
+  );
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [generatedLoaded, setGeneratedLoaded] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const imageFieldRef = useRef<HTMLFieldSetElement>(null);
 
   // react-hook-form
@@ -42,10 +46,10 @@ export default function Home() {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log(data);
     if (!(data.image instanceof File)) return;
-    setImageName(data.image.name);
     await uploadImage(data.image, data.command);
   };
 
+  // register image, and set preview image
   const onDrop = useCallback(
     async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       acceptedFiles.forEach(async (file) => {
@@ -90,6 +94,7 @@ export default function Home() {
     return () => URL.revokeObjectURL(previewImage);
   }, [previewImage]);
 
+  // upload image to cloudinary
   const uploadImage = async (image: File, command: string) => {
     setIsUploading(true);
     const reader = new FileReader();
@@ -117,12 +122,19 @@ export default function Home() {
       }
       const uploadedFile: UploadedFile = await response.json();
       if (!uploadedFile) return;
+      setOriginalImage({
+        name: image.name,
+        url: uploadedFile.secure_url,
+      });
+      // TODO: remove setGeneratedImage
+      setGeneratedImage(uploadedFile.secure_url);
       setIsUploading(false);
       setIsLoading(false);
       generateImage(uploadedFile.secure_url, command);
     };
   };
 
+  // generate image from replicate
   const generateImage = async (image: string, command: string) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     setIsLoading(true);
@@ -158,8 +170,37 @@ export default function Home() {
       setGeneratedImage(prediction.output);
     }
 
+    setSelectedIndex(1);
     setIsLoading(false);
   };
+
+  // headlessui tabs
+  const tabs = [
+    {
+      name: "Original image",
+      content: (
+        <Image
+          src={originalImage?.url ?? ""}
+          alt="original"
+          width={576}
+          height={576}
+          loading="lazy"
+        />
+      ),
+    },
+    {
+      name: "Edited image",
+      content: (
+        <Image
+          src={generatedImage ?? ""}
+          alt="edited"
+          width={576}
+          height={576}
+          loading="lazy"
+        />
+      ),
+    },
+  ];
 
   return (
     <>
@@ -176,111 +217,119 @@ export default function Home() {
             and edit it with text commands
           </p>
         </div>
-        <form
-          aria-label="edit photo form"
-          className="mx-auto grid w-full max-w-xl gap-6"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <fieldset className="grid gap-5" ref={imageFieldRef}>
-            <label
-              htmlFor="image"
-              className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
-            >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
-                {watch("image") ? (
-                  <Check aria-hidden="true" className="h-5 w-5" />
-                ) : (
-                  1
-                )}
-              </span>
-              Select your image
-            </label>
-            {!previewImage ? (
-              <FileInput
-                maxSize={5000000}
-                isUploading={isUploading}
-                onDrop={onDrop}
-              />
-            ) : (
-              <div className="group relative mx-auto aspect-square w-full max-w-[30rem] rounded-lg">
-                <div className="absolute inset-0 bg-gray-900 opacity-0 transition-opacity group-hover:opacity-80" />
-                <div className="absolute inset-0 flex h-full w-full items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle aria-hidden="true" className="h-4 w-4" />
-                      <p className="text-base font-medium">Image selected</p>
+        {generatedImage ? (
+          <ImageTabs
+            tabs={tabs}
+            selectedIndex={selectedIndex}
+            setSelectedIndex={setSelectedIndex}
+          />
+        ) : (
+          <form
+            aria-label="edit photo form"
+            className="mx-auto grid w-full max-w-xl gap-6"
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <fieldset className="grid gap-5" ref={imageFieldRef}>
+              <label
+                htmlFor="image"
+                className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
+                  {watch("image") ? (
+                    <Check aria-hidden="true" className="h-5 w-5" />
+                  ) : (
+                    1
+                  )}
+                </span>
+                Select your image
+              </label>
+              {!previewImage ? (
+                <FileInput
+                  maxSize={5000000}
+                  isUploading={isUploading}
+                  onDrop={onDrop}
+                />
+              ) : (
+                <div className="group relative mx-auto aspect-square w-full max-w-[30rem] rounded-lg">
+                  <div className="absolute inset-0 bg-gray-900 opacity-0 transition-opacity group-hover:opacity-80" />
+                  <div className="absolute inset-0 flex h-full w-full items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle aria-hidden="true" className="h-4 w-4" />
+                        <p className="text-base font-medium">Image selected</p>
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        Click to select another image, or drag and drop
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-400">
-                      Click here to select another image or drag and drop
-                    </p>
                   </div>
-                </div>
-                <div className="opacity-0">
-                  <FileInput
-                    maxSize={5000000}
-                    isUploading={isUploading}
-                    onDrop={onDrop}
-                    className="absolute inset-0 h-full w-full"
+                  <div className="opacity-0">
+                    <FileInput
+                      maxSize={5000000}
+                      isUploading={isUploading}
+                      onDrop={onDrop}
+                      className="absolute inset-0 h-full w-full"
+                    />
+                  </div>
+                  <Image
+                    src={previewImage}
+                    alt="preview"
+                    width={480}
+                    height={480}
+                    className="aspect-square w-[30rem] rounded-lg object-cover"
                   />
                 </div>
-                <Image
-                  src={previewImage}
-                  alt="preview"
-                  width={480}
-                  height={480}
-                  className="aspect-square w-[30rem] rounded-lg object-cover"
-                />
-              </div>
-            )}
-            {formState.errors.image?.message ? (
-              <div className="flex items-center gap-2 text-red-500">
-                <AlertCircle aria-hidden="true" className="h-4 w-4" />
-                <p className="text-sm font-medium">
-                  {formState.errors.image.message}
-                </p>
-              </div>
-            ) : null}
-          </fieldset>
-          <fieldset className="grid gap-5">
-            <label
-              htmlFor="command"
-              className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
+              )}
+              {formState.errors.image?.message ? (
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle aria-hidden="true" className="h-4 w-4" />
+                  <p className="text-sm font-medium">
+                    {formState.errors.image.message}
+                  </p>
+                </div>
+              ) : null}
+            </fieldset>
+            <fieldset className="grid gap-5">
+              <label
+                htmlFor="command"
+                className="flex items-center gap-3 text-sm font-medium text-white sm:text-base"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
+                  {watch("command") && watch("command").length >= 3 ? (
+                    <Check aria-hidden="true" className="h-5 w-5" />
+                  ) : (
+                    2
+                  )}
+                </span>
+                Add your command
+              </label>
+              <input
+                type="text"
+                id="target"
+                className="w-full rounded-md border-gray-400 bg-transparent px-4 py-2.5 text-base text-gray-100 transition-colors placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. a face with black hair"
+                {...register("command", { required: true })}
+              />
+              {formState.errors.command ? (
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle aria-hidden="true" className="h-4 w-4" />
+                  <p className="text-sm font-medium">
+                    {formState.errors.command.message}
+                  </p>
+                </div>
+              ) : null}
+            </fieldset>
+            <Button
+              aria-label="submit"
+              className="w-full"
+              isLoading={isUploading || isLoading}
+              loadingVariant="spinner"
+              disabled={isUploading || isLoading}
             >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-600 text-sm text-white sm:text-base">
-                {watch("command") && watch("command").length >= 3 ? (
-                  <Check aria-hidden="true" className="h-5 w-5" />
-                ) : (
-                  2
-                )}
-              </span>
-              Add your command
-            </label>
-            <input
-              type="text"
-              id="target"
-              className="w-full rounded-md border-gray-400 bg-transparent px-4 py-2.5 text-base text-gray-100 transition-colors placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g. a face with black hair"
-              {...register("command", { required: true })}
-            />
-            {formState.errors.command ? (
-              <div className="flex items-center gap-2 text-red-500">
-                <AlertCircle aria-hidden="true" className="h-4 w-4" />
-                <p className="text-sm font-medium">
-                  {formState.errors.command.message}
-                </p>
-              </div>
-            ) : null}
-          </fieldset>
-          <Button
-            aria-label="submit"
-            className="w-full"
-            isLoading={isUploading || isLoading}
-            loadingVariant="spinner"
-            disabled={isUploading || isLoading}
-          >
-            Submit
-          </Button>
-        </form>
+              Submit
+            </Button>
+          </form>
+        )}
       </main>
     </>
   );
