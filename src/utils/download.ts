@@ -1,3 +1,5 @@
+import { toast } from "react-hot-toast";
+
 export const downloadFile = (
   url: string,
   filename: string,
@@ -21,5 +23,8 @@ export const downloadFile = (
         setIsDownloading(false);
       })
     )
-    .catch((e) => console.error(e));
+    .catch((error) => {
+      toast.error(error);
+      setIsDownloading(false);
+    });
 };

@@ -4,10 +4,18 @@ import ImageTabs from "@/components/ImageTabs";
 import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
 import { downloadFile } from "@/utils/download";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Check, CheckCircle, Download } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  CheckCircle,
+  Download,
+  Loader2,
+  Upload,
+  X,
+} from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ErrorCode, FileRejection } from "react-dropzone";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -41,14 +49,16 @@ export default function Home() {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const imageFieldRef = useRef<HTMLFieldSetElement>(null);
+  const imageTabsRef = useRef<HTMLDivElement>(null);
 
   // react-hook-form
-  const { register, handleSubmit, formState, watch, setValue } =
+  const { register, handleSubmit, formState, watch, setValue, reset } =
     useForm<Inputs>({ resolver: zodResolver(schema) });
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log(data);
     if (!(data.image instanceof File)) return;
     await uploadImage(data.image, data.command);
+    setSelectedIndex(1);
   };
 
   // register image, and set preview image
@@ -172,9 +182,15 @@ export default function Home() {
       setGeneratedImage(prediction.output);
     }
 
-    setSelectedIndex(1);
     setIsLoading(false);
   };
+
+  // scroll to image tabs on image generation
+  useEffect(() => {
+    if (!imageTabsRef.current) return;
+    const offset = imageTabsRef.current.offsetTop - 85;
+    window.scrollTo({ top: offset, behavior: "smooth" });
+  }, [generatedImage]);
 
   // headlessui tabs
   const tabs = [
@@ -195,25 +211,52 @@ export default function Home() {
       name: "Edited",
       content: (
         <div className="relative">
-          <button
-            aria-label="download edited image"
-            className={twMerge(
-              "absolute top-3 right-3 z-10 transform rounded-full bg-gray-900/50 p-2",
-              "transition duration-300 ease-in-out hover:scale-105 active:scale-95",
-              isDownloading && "pointer-events-none animate-pulse"
-            )}
-            onClick={() => {
-              if (!generatedImage || originalImage?.name === undefined) return;
-              downloadFile(
-                generatedImage,
-                originalImage?.name.replace(/(\.[^/.]+)$/, "-edited$1") ??
-                  "edited.png",
-                setIsDownloading
-              );
-            }}
-          >
-            <Download aria-hidden="true" className="h-5 w-5 text-white" />
-          </button>
+          <div className="absolute top-3 right-3 z-10 flex transform items-center gap-2">
+            <button
+              aria-label="upload another image"
+              className={twMerge(
+                "rounded-full bg-gray-900/50 p-2 text-white",
+                "transition duration-300 ease-in-out hover:scale-105 active:scale-95"
+              )}
+              onClick={() => {
+                reset();
+                setPreviewImage(null);
+                setOriginalImage(null);
+                setGeneratedImage(null);
+                setSelectedIndex(0);
+                setIsLoading(false);
+                setIsUploading(false);
+                setIsDownloading(false);
+              }}
+            >
+              <Upload aria-hidden="true" className="h-5 w-5" />
+            </button>
+            <button
+              aria-label="download edited image"
+              className={twMerge(
+                "rounded-full bg-gray-900/50 p-2 text-white",
+                "transition duration-300 ease-in-out hover:scale-105 active:scale-95",
+                isDownloading && "pointer-events-none animate-pulse"
+              )}
+              onClick={() => {
+                if (!generatedImage || originalImage?.name === undefined)
+                  return;
+                setIsDownloading(true);
+                downloadFile(
+                  generatedImage,
+                  originalImage?.name.replace(/(\.[^/.]+)$/, "-edited$1") ??
+                    "edited.png",
+                  setIsDownloading
+                );
+              }}
+            >
+              {isDownloading ? (
+                <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+              ) : (
+                <Download aria-hidden="true" className="h-5 w-5" />
+              )}
+            </button>
+          </div>
           <Image
             src={generatedImage ?? ""}
             alt="edited"
@@ -232,7 +275,7 @@ export default function Home() {
       <Head>
         <title>PhotoTweak</title>
       </Head>
-      <main className="container mx-auto mt-32 mb-16 flex flex-col items-center justify-center gap-16 px-6">
+      <main className="container mx-auto mt-32 mb-16 flex flex-col items-center justify-center gap-12 px-6">
         <div className="grid max-w-xl gap-5">
           <h1 className="text-center text-4xl font-bold leading-tight sm:text-6xl sm:leading-tight">
             Edit portraits with text commands
@@ -243,11 +286,13 @@ export default function Home() {
           </p>
         </div>
         {generatedImage ? (
-          <ImageTabs
-            tabs={tabs}
-            selectedIndex={selectedIndex}
-            setSelectedIndex={setSelectedIndex}
-          />
+          <div ref={imageTabsRef}>
+            <ImageTabs
+              tabs={tabs}
+              selectedIndex={selectedIndex}
+              setSelectedIndex={setSelectedIndex}
+            />
+          </div>
         ) : (
           <form
             aria-label="edit photo form"
