@@ -1,6 +1,7 @@
 import { NextApiRequest } from "next";
 import type { DropEvent, FileRejection } from "react-dropzone";
 
+// next api request
 export interface NextApiRequestReplicate extends NextApiRequest {
   body: {
     image: string;
@@ -14,6 +15,7 @@ export interface NextApiRequestCloudinary extends NextApiRequest {
   };
 }
 
+// file input
 export type OriginalImage = {
   name: string;
   url: string;
@@ -31,6 +33,7 @@ export type UploadedFile = {
   secure_url: string;
 };
 
+// replicate prediction
 export type PredictionBody = {
   version: string;
   input: {

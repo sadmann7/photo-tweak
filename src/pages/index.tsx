@@ -2,14 +2,16 @@ import Button from "@/components/Button";
 import FileInput from "@/components/FileInput";
 import ImageTabs from "@/components/ImageTabs";
 import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
+import { downloadFile } from "@/utils/download";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Check, CheckCircle } from "lucide-react";
+import { AlertCircle, Check, CheckCircle, Download } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { ErrorCode, FileRejection } from "react-dropzone";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
+import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
 const schema = z.object({
@@ -177,7 +179,7 @@ export default function Home() {
   // headlessui tabs
   const tabs = [
     {
-      name: "Original image",
+      name: "Original",
       content: (
         <Image
           src={originalImage?.url ?? ""}
@@ -185,19 +187,42 @@ export default function Home() {
           width={576}
           height={576}
           loading="lazy"
+          className="aspect-square w-[36rem] rounded-lg object-cover"
         />
       ),
     },
     {
-      name: "Edited image",
+      name: "Edited",
       content: (
-        <Image
-          src={generatedImage ?? ""}
-          alt="edited"
-          width={576}
-          height={576}
-          loading="lazy"
-        />
+        <div className="relative">
+          <button
+            aria-label="download edited image"
+            className={twMerge(
+              "absolute top-3 right-3 z-10 transform rounded-full bg-gray-900/50 p-2",
+              "transition duration-300 ease-in-out hover:scale-105 active:scale-95",
+              isDownloading && "pointer-events-none animate-pulse"
+            )}
+            onClick={() => {
+              if (!generatedImage || originalImage?.name === undefined) return;
+              downloadFile(
+                generatedImage,
+                originalImage?.name.replace(/(\.[^/.]+)$/, "-edited$1") ??
+                  "edited.png",
+                setIsDownloading
+              );
+            }}
+          >
+            <Download aria-hidden="true" className="h-5 w-5 text-white" />
+          </button>
+          <Image
+            src={generatedImage ?? ""}
+            alt="edited"
+            width={576}
+            height={576}
+            loading="lazy"
+            className="aspect-square w-[36rem] rounded-lg object-cover"
+          />
+        </div>
       ),
     },
   ];
