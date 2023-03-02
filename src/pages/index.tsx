@@ -11,7 +11,6 @@ import {
   Download,
   Loader2,
   Upload,
-  X,
 } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
@@ -203,7 +202,7 @@ export default function Home() {
           width={576}
           height={576}
           loading="lazy"
-          className="aspect-square w-[36rem] rounded-lg object-cover"
+          className="aspect-square w-[36rem] rounded-md object-cover"
         />
       ),
     },
@@ -213,7 +212,7 @@ export default function Home() {
         <div className="relative">
           <div className="absolute top-3 right-3 z-10 flex transform items-center gap-2">
             <button
-              aria-label="upload another image"
+              aria-label="reset image and start over"
               className={twMerge(
                 "rounded-full bg-gray-900/50 p-2 text-white",
                 "transition duration-300 ease-in-out hover:scale-105 active:scale-95"
@@ -263,7 +262,7 @@ export default function Home() {
             width={576}
             height={576}
             loading="lazy"
-            className="aspect-square w-[36rem] rounded-lg object-cover"
+            className="aspect-square w-[36rem] rounded-md object-cover"
           />
         </div>
       ),

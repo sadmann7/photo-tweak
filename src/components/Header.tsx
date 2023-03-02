@@ -58,7 +58,7 @@ const Header = () => {
                 href={link.href}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-md bg-transparent p-1.5 text-base text-white transition-colors hover:bg-gray-600 active:bg-gray-500"
+                className="rounded-md p-1.5 text-base text-white transition hover:bg-gray-600 active:scale-95"
               >
                 {link.icon}
               </a>
@@ -67,7 +67,7 @@ const Header = () => {
                 aria-label={`navigate to ${link.name} page`}
                 key={index}
                 href={link.href}
-                className={`rounded-md p-1.5 text-base text-white transition-colors hover:bg-gray-600 active:bg-gray-500 ${
+                className={`rounded-md p-1.5 text-base text-white transition hover:bg-gray-600 active:scale-95 ${
                   router.pathname === link.href
                     ? "bg-gray-600"
                     : "bg-transparent"
