@@ -1,4 +1,5 @@
 import Button from "@/components/Button";
+import DemoModal from "@/components/DemoModal";
 import FileInput from "@/components/FileInput";
 import ImageTabs from "@/components/ImageTabs";
 import type { OriginalImage, PredictionResult, UploadedFile } from "@/types";
@@ -46,6 +47,7 @@ export default function Home() {
   const [generatedLoaded, setGeneratedLoaded] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const imageFieldRef = useRef<HTMLFieldSetElement>(null);
   const imageTabsRef = useRef<HTMLDivElement>(null);
@@ -275,21 +277,22 @@ export default function Home() {
         <title>PhotoTweak</title>
       </Head>
       <main className="container mx-auto mt-32 mb-16 flex flex-col items-center justify-center gap-12 px-6">
-        <div className="grid max-w-xl gap-5">
-          <h1 className="text-center text-4xl font-bold leading-tight sm:text-6xl sm:leading-tight">
+        <div className="grid max-w-xl place-items-center gap-5">
+          <h1 className="text-center text-4xl font-bold leading-tight text-gray-50 sm:text-6xl sm:leading-tight">
             Edit portraits with text commands
           </h1>
           <p className="text-center text-lg text-gray-300 sm:text-xl">
             Want to edit portrait with only text commands? Upload your portrait
             and edit it with text commands
           </p>
+          <DemoModal isOpen={isOpen} setIsOpen={setIsOpen} />
         </div>
         {generatedImage ? (
           <div ref={imageTabsRef}>
             <ImageTabs
-              tabs={tabs}
               selectedIndex={selectedIndex}
               setSelectedIndex={setSelectedIndex}
+              tabs={tabs}
             />
           </div>
         ) : (

@@ -33,7 +33,7 @@ const Header = () => {
   return (
     <header
       aria-label="header"
-      className={`fixed top-0 left-0 z-20 flex w-full items-center gap-4 transition ${
+      className={`fixed top-0 left-0 z-10 flex w-full items-center gap-4 transition ${
         isScrolled
           ? "bg-gray-700/80 shadow-md backdrop-blur-md backdrop-saturate-150 backdrop-filter duration-300 ease-in-out"
           : "bg-gray-700"
