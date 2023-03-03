@@ -8,8 +8,8 @@ type MetaProps = {
 
 const Meta = ({
   title = "PhotoTweak",
-  description = "Edit photos with text",
-  image = "https://texttweak.vercel.app/api/og?title=TextTweak&description=Edit%20photos%20with%20text",
+  description = "Edit photos with text command",
+  image = "https://phototweak.vercel.app/api/og?title=PhotoTweak&description=Edit%20photos%20with%20text%20command",
 }: MetaProps) => {
   return (
     <Head>
@@ -17,7 +17,7 @@ const Meta = ({
       <meta name="description" content={description} />
       <link rel="icon" href="/favicon.ico" />
 
-      <meta property="og:site_name" content="WatchCopilot" />
+      <meta property="og:site_name" content="PhotoTweak" />
       <meta property="og:description" content={description} />
       <meta property="og:title" content={title} />
       <meta property="og:image" content={image} />
