@@ -91,7 +91,7 @@ export default function Home() {
 
         switch (file.errors[0]?.code as ErrorCode) {
           case "file-invalid-type":
-            toast.error("Please select a valid image");
+            toast.error("Please select a png or jpg image");
             break;
           case "file-too-large":
             const size = (file.file.size / 1024 / 1024).toFixed(2);
@@ -157,37 +157,37 @@ export default function Home() {
   const generateImage = async (image: string, command: string) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     setIsLoading(true);
-    // const response = await fetch("/api/predictions", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({
-    //     image,
-    //     command,
-    //   }),
-    // });
-    // let prediction: PredictionResult = await response.json();
+    const response = await fetch("/api/predictions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        image,
+        command,
+      }),
+    });
+    let prediction: PredictionResult = await response.json();
 
-    // if (response.status !== 201) {
-    //   toast.error(prediction.error);
-    //   return;
-    // }
-    // setGeneratedImage(prediction.output);
+    if (response.status !== 201) {
+      toast.error(prediction.error);
+      return;
+    }
+    setGeneratedImage(prediction.output);
 
-    // while (
-    //   prediction.status !== "succeeded" &&
-    //   prediction.status !== "failed"
-    // ) {
-    //   await new Promise((resolve) => setTimeout(resolve, 1000));
-    //   const response = await fetch("/api/predictions/" + prediction.id);
-    //   prediction = await response.json();
-    //   if (response.status !== 200) {
-    //     toast.error(prediction.error);
-    //     return;
-    //   }
-    //   setGeneratedImage(prediction.output);
-    // }
+    while (
+      prediction.status !== "succeeded" &&
+      prediction.status !== "failed"
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/predictions/" + prediction.id);
+      prediction = await response.json();
+      if (response.status !== 200) {
+        toast.error(prediction.error);
+        return;
+      }
+      setGeneratedImage(prediction.output);
+    }
 
     setIsLoading(false);
   };
@@ -227,12 +227,12 @@ export default function Home() {
         isLoading && !generatedImage ? (
           <div className="relative aspect-square rounded-md">
             <SkeletonLoading />
-            <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform text-center">
+            <div className="absolute top-1/2 left-1/2 z-10 grid -translate-x-1/2 -translate-y-1/2 transform gap-2 text-center">
               <p className="text-2xl font-bold text-gray-100">
                 Generating image...
               </p>
               <p className="text-sm text-gray-200">
-                This may take a few minutes
+                This can sometimes take around 3 to 5 minutes during cold start
               </p>
             </div>
           </div>
@@ -340,6 +340,7 @@ export default function Home() {
               aria-label="edit photo form"
               className="mx-auto grid w-full max-w-xl gap-6"
               onSubmit={handleSubmit(onSubmit)}
+              autoComplete="off"
             >
               <fieldset className="grid gap-5" ref={imageFieldRef}>
                 <label

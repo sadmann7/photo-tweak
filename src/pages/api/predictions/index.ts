@@ -25,12 +25,12 @@ export default async function handler(
       // becomes to the target description. Negative values moves the
       // generated image further from the target description
       // Range: -10 to 10
-      manipulation_strength: 4.1,
+      manipulation_strength: 7,
       // The higher the disentanglement threshold, the more specific the
       // changes are to the target attribute. Lower values mean that broader
       // changes are made to the input image
       // Range: 0.08 to 0.3
-      disentanglement_threshold: 0.15,
+      disentanglement_threshold: 0.3,
     },
   };
 

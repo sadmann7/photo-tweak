@@ -1,6 +1,5 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { X } from "lucide-react";
-import Image from "next/image";
 import { Fragment, type Dispatch, type SetStateAction } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -62,12 +61,12 @@ const DemoModal = ({ isOpen, setIsOpen }: DemoModalProps) => {
                   >
                     <X aria-hidden="true" className="h-4 w-4" />
                   </button>
-                  <Image
-                    src="/images/placeholder.gif"
-                    alt="Demo"
-                    width={672}
-                    height={672}
-                    className="aspect-square w-[672px] rounded-lg object-cover shadow-md"
+                  <video
+                    className="aspect-square"
+                    width="100%"
+                    height="auto"
+                    autoPlay
+                    src="/vidoes/video-demo.mp4"
                   />
                 </Dialog.Panel>
               </Transition.Child>

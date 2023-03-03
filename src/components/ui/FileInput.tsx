@@ -19,7 +19,8 @@ const FileInput = ({
 }: FileInputProps) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      "image/*": [],
+      "image/jpeg": [],
+      "image/png": [],
     },
     maxSize,
     onDrop,
