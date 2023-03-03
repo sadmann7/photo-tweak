@@ -40,17 +40,19 @@ const schema = z.object({
 type Inputs = z.infer<typeof schema>;
 
 export default function Home() {
-  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [generatedLoaded, setGeneratedLoaded] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedTabIndex, setSelectedTabIndex] = useState<number>(0);
   const imageFieldRef = useRef<HTMLFieldSetElement>(null);
   const imageTabsRef = useRef<HTMLDivElement>(null);
 
   // image store
   const {
+    isLoading,
+    setIsLoading,
+    isUploading,
+    setIsUploading,
     previewImage,
     setPreviewImage,
     originalImage,
@@ -66,7 +68,7 @@ export default function Home() {
     console.log(data);
     if (!(data.image instanceof File)) return;
     await uploadImage(data.image, data.command);
-    setSelectedIndex(1);
+    setSelectedTabIndex(1);
   };
 
   // register image, and set preview image
@@ -142,7 +144,7 @@ export default function Home() {
           name: image.name,
           url: uploadedFile.secureUrl,
         });
-        // TODO: remove setGeneratedImage
+        // setGeneratedImage is called to reduce transition time
         setGeneratedImage(uploadedFile.secureUrl);
         setIsUploading(false);
         setIsLoading(false);
@@ -155,40 +157,47 @@ export default function Home() {
   const generateImage = async (image: string, command: string) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     setIsLoading(true);
-    const response = await fetch("/api/predictions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        image,
-        command,
-      }),
-    });
-    let prediction: PredictionResult = await response.json();
+    // const response = await fetch("/api/predictions", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     image,
+    //     command,
+    //   }),
+    // });
+    // let prediction: PredictionResult = await response.json();
 
-    if (response.status !== 201) {
-      toast.error(prediction.error);
-      return;
-    }
-    setGeneratedImage(prediction.output);
+    // if (response.status !== 201) {
+    //   toast.error(prediction.error);
+    //   return;
+    // }
+    // setGeneratedImage(prediction.output);
 
-    while (
-      prediction.status !== "succeeded" &&
-      prediction.status !== "failed"
-    ) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const response = await fetch("/api/predictions/" + prediction.id);
-      prediction = await response.json();
-      if (response.status !== 200) {
-        toast.error(prediction.error);
-        return;
-      }
-      setGeneratedImage(prediction.output);
-    }
+    // while (
+    //   prediction.status !== "succeeded" &&
+    //   prediction.status !== "failed"
+    // ) {
+    //   await new Promise((resolve) => setTimeout(resolve, 1000));
+    //   const response = await fetch("/api/predictions/" + prediction.id);
+    //   prediction = await response.json();
+    //   if (response.status !== 200) {
+    //     toast.error(prediction.error);
+    //     return;
+    //   }
+    //   setGeneratedImage(prediction.output);
+    // }
 
     setIsLoading(false);
   };
+
+  // reset form on image generation
+  useEffect(() => {
+    if (!generatedImage) return;
+    reset();
+    setPreviewImage(null);
+  }, [generatedImage, reset, setPreviewImage]);
 
   // scroll to image tabs on image generation
   useEffect(() => {
@@ -214,74 +223,80 @@ export default function Home() {
     },
     {
       name: "Edited",
-      content: isLoading ? (
-        <div className="relative aspect-square rounded-md">
-          <SkeletonLoading />
-          <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform text-center">
-            <p className="text-2xl font-bold text-gray-100">
-              Generating image...
-            </p>
-            <p className="text-sm text-gray-200">This may take a few minutes</p>
+      content:
+        isLoading && !generatedImage ? (
+          <div className="relative aspect-square rounded-md">
+            <SkeletonLoading />
+            <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform text-center">
+              <p className="text-2xl font-bold text-gray-100">
+                Generating image...
+              </p>
+              <p className="text-sm text-gray-200">
+                This may take a few minutes
+              </p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="relative">
-          <div className="absolute top-3 right-3 z-10 flex transform items-center gap-2">
-            <button
-              aria-label="reset image and start over"
-              className={twMerge(
-                "rounded-full bg-gray-900/50 p-2 text-white",
-                "transition duration-300 ease-in-out hover:scale-105 active:scale-95"
-              )}
-              onClick={() => {
-                reset();
-                setPreviewImage(null);
-                setOriginalImage(null);
-                setGeneratedImage(null);
-                setSelectedIndex(0);
-                setIsLoading(false);
-                setIsUploading(false);
-                setIsDownloading(false);
-              }}
-            >
-              <Upload aria-hidden="true" className="h-5 w-5" />
-            </button>
-            <button
-              aria-label="download edited image"
-              className={twMerge(
-                "rounded-full bg-gray-900/50 p-2 text-white",
-                "transition duration-300 ease-in-out hover:scale-105 active:scale-95",
-                isDownloading && "pointer-events-none animate-pulse"
-              )}
-              onClick={() => {
-                if (!generatedImage || originalImage?.name === undefined)
-                  return;
-                setIsDownloading(true);
-                downloadFile(
-                  generatedImage,
-                  originalImage?.name.replace(/(\.[^/.]+)$/, "-edited$1") ??
-                    "edited.png",
-                  setIsDownloading
-                );
-              }}
-            >
-              {isDownloading ? (
-                <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
-              ) : (
-                <Download aria-hidden="true" className="h-5 w-5" />
-              )}
-            </button>
+        ) : (
+          <div className="relative">
+            <div className="absolute top-3 right-3 z-10 flex transform items-center gap-2">
+              <button
+                aria-label="reset image and start over"
+                className={twMerge(
+                  "rounded-full bg-gray-900/50 p-2 text-white",
+                  "transition duration-300 ease-in-out hover:scale-105 active:scale-95"
+                )}
+                onClick={() => {
+                  reset();
+                  setPreviewImage(null);
+                  setOriginalImage(null);
+                  setGeneratedImage(null);
+                  setSelectedTabIndex(0);
+                  setIsLoading(false);
+                  setIsUploading(false);
+                  setIsDownloading(false);
+                }}
+              >
+                <Upload aria-hidden="true" className="h-5 w-5" />
+              </button>
+              <button
+                aria-label="download edited image"
+                className={twMerge(
+                  "rounded-full bg-gray-900/50 p-2 text-white",
+                  "transition duration-300 ease-in-out hover:scale-105 active:scale-95",
+                  isDownloading && "pointer-events-none animate-pulse"
+                )}
+                onClick={() => {
+                  if (!generatedImage || originalImage?.name === undefined)
+                    return;
+                  setIsDownloading(true);
+                  downloadFile(
+                    generatedImage,
+                    originalImage?.name.replace(/(\.[^/.]+)$/, "-edited$1") ??
+                      "edited.png",
+                    setIsDownloading
+                  );
+                }}
+              >
+                {isDownloading ? (
+                  <Loader2
+                    aria-hidden="true"
+                    className="h-5 w-5 animate-spin"
+                  />
+                ) : (
+                  <Download aria-hidden="true" className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+            <Image
+              src={generatedImage ?? "/images/placeholder.webp"}
+              alt="edited"
+              width={576}
+              height={576}
+              loading="lazy"
+              className="aspect-square w-[36rem] rounded-md object-cover"
+            />
           </div>
-          <Image
-            src={generatedImage ?? "/images/placeholder.webp"}
-            alt="edited"
-            width={576}
-            height={576}
-            loading="lazy"
-            className="aspect-square w-[36rem] rounded-md object-cover"
-          />
-        </div>
-      ),
+        ),
     },
   ];
 
@@ -291,7 +306,7 @@ export default function Home() {
         <title>PhotoTweak</title>
       </Head>
       <main className="container mx-auto mt-32 mb-16 flex flex-col items-center justify-center gap-12 px-6">
-        {generatedImage ? (
+        {generatedImage || isLoading ? (
           <Fragment>
             <div className="grid max-w-xl place-items-center gap-5">
               <h1 className="text-center text-4xl font-bold leading-tight text-gray-50 sm:text-6xl sm:leading-tight">
@@ -303,8 +318,8 @@ export default function Home() {
             </div>
             <div ref={imageTabsRef} className="w-full max-w-xl">
               <ImageTabs
-                selectedIndex={selectedIndex}
-                setSelectedIndex={setSelectedIndex}
+                selectedIndex={selectedTabIndex}
+                setSelectedIndex={setSelectedTabIndex}
                 tabs={tabs}
               />
             </div>
@@ -319,7 +334,7 @@ export default function Home() {
                 Want to edit portrait with only text commands? Upload your
                 portrait and edit it with text commands
               </p>
-              <DemoModal isOpen={isOpen} setIsOpen={setIsOpen} />
+              <DemoModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
             </div>
             <form
               aria-label="edit photo form"

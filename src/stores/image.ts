@@ -1,8 +1,12 @@
-import { OriginalImage } from "@/types/globals";
+import type { OriginalImage } from "@/types/globals";
 import { create } from "zustand";
-import { createJSONStorage, devtools, persist } from "zustand/middleware";
+import { devtools } from "zustand/middleware";
 
 type ImageState = {
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
+  isUploading: boolean;
+  setIsUploading: (isUploading: boolean) => void;
   previewImage: string | null;
   setPreviewImage: (image: string | null) => void;
   originalImage: OriginalImage | null;
@@ -12,25 +16,22 @@ type ImageState = {
 };
 
 const useImageStore = create<ImageState>()(
-  devtools(
-    persist(
-      (set) => ({
-        previewImage: null,
-        setPreviewImage: (image: string | null) =>
-          set(() => ({ previewImage: image })),
-        originalImage: null,
-        setOriginalImage: (image: OriginalImage | null) =>
-          set(() => ({ originalImage: image })),
-        generatedImage: null,
-        setGeneratedImage: (image: string | null) =>
-          set(() => ({ generatedImage: image })),
-      }),
-      {
-        name: "image-storage",
-        storage: createJSONStorage(() => sessionStorage),
-      }
-    )
-  )
+  devtools((set) => ({
+    isLoading: false,
+    setIsLoading: (isLoading: boolean) => set(() => ({ isLoading: isLoading })),
+    isUploading: false,
+    setIsUploading: (isUploading: boolean) =>
+      set(() => ({ isUploading: isUploading })),
+    previewImage: null,
+    setPreviewImage: (image: string | null) =>
+      set(() => ({ previewImage: image })),
+    originalImage: null,
+    setOriginalImage: (image: OriginalImage | null) =>
+      set(() => ({ originalImage: image })),
+    generatedImage: null,
+    setGeneratedImage: (image: string | null) =>
+      set(() => ({ generatedImage: image })),
+  }))
 );
 
 export default useImageStore;
