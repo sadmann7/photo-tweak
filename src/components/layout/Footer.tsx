@@ -13,6 +13,15 @@ const Footer = () => {
           >
             Replicate
           </a>
+          <a
+            aria-label="navigate to cloudinary"
+            href="https://cloudinary.com"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-gray-200 transition-colors hover:text-white active:text-gray-100"
+          >
+            {", "} Cloudinary
+          </a>
           {", and "}
           <a
             aria-label="navigate to vercel"

@@ -232,7 +232,7 @@ export default function Home() {
                 Generating image...
               </p>
               <p className="text-sm text-gray-200">
-                This can sometimes take around 3 to 5 minutes during cold start
+                Please wait, this may take about 2-3 minutes
               </p>
             </div>
           </div>
@@ -313,7 +313,8 @@ export default function Home() {
                 Your edited photo
               </h1>
               <p className="text-center text-lg text-gray-400 sm:text-xl">
-                Your photos will be deleted from our server after 4 hours
+                Your photos will be stored for 15 minutes and then deleted from
+                our server
               </p>
             </div>
             <div ref={imageTabsRef} className="w-full max-w-xl">

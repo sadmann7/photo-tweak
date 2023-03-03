@@ -34,7 +34,7 @@ export default async function handler(
     createdAt: uploadedImage.created_at,
   });
 
-  // delete images created more than 4 hours ago
+  // delete images created more than 15 minutes ago
   const options: UploadApiOptions = {
     resource_type: "image",
     type: "upload",
@@ -44,10 +44,10 @@ export default async function handler(
   const result: UploadApiResponse = await cloudinary.api.resources(options);
   const images = result.resources;
   const now = new Date();
-  const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+  const targetTime = new Date(now.getTime() - 15 * 60 * 1000);
   images.forEach(async (image: UploadApiResponse) => {
     const createdAt = new Date(image.created_at);
-    if (createdAt < fourHoursAgo) {
+    if (createdAt < targetTime) {
       await cloudinary.uploader.destroy(image.public_id);
     }
   });
