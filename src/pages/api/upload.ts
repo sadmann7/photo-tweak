@@ -34,7 +34,7 @@ export default async function handler(
     createdAt: uploadedImage.created_at,
   });
 
-  // delete images if created more than 4 hours ago
+  // delete images created 4 hours ago
   const options: UploadApiOptions = {
     resource_type: "image",
     type: "upload",

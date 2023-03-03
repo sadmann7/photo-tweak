@@ -1,3 +1,4 @@
+import useImageStore from "@/stores/image";
 import { Github, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -30,6 +31,10 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // image store
+  const { setPreviewImage, setOriginalImage, setGeneratedImage } =
+    useImageStore((state) => state);
+
   return (
     <header
       aria-label="header"
@@ -44,6 +49,11 @@ const Header = () => {
         <Link
           aria-label="navigate to home page"
           href="/"
+          onClick={() => {
+            setPreviewImage(null);
+            setOriginalImage(null);
+            setGeneratedImage(null);
+          }}
           className="flex items-center gap-2 text-gray-100 transition-colors hover:text-white active:text-gray-100"
         >
           <ImageIcon aria-hidden="true" className="h-6 w-6" />

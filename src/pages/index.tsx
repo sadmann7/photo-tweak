@@ -3,11 +3,8 @@ import ImageTabs from "@/components/ImageTabs";
 import Button from "@/components/ui/Button";
 import FileInput from "@/components/ui/FileInput";
 import SkeletonLoading from "@/components/ui/SkeletonLoading";
-import type {
-  OriginalImage,
-  PredictionResult,
-  UploadedFile,
-} from "@/types/globals";
+import useImageStore from "@/stores/image";
+import type { PredictionResult, UploadedFile } from "@/types/globals";
 import { downloadFile } from "@/utils/download";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -26,7 +23,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
-
+z;
 const schema = z.object({
   image: z.unknown().refine((v) => v instanceof File, {
     message: "Upload an image",
@@ -43,12 +40,7 @@ const schema = z.object({
 type Inputs = z.infer<typeof schema>;
 
 export default function Home() {
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [originalImage, setOriginalImage] = useState<OriginalImage | null>(
-    null
-  );
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [generatedLoaded, setGeneratedLoaded] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
@@ -56,6 +48,16 @@ export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const imageFieldRef = useRef<HTMLFieldSetElement>(null);
   const imageTabsRef = useRef<HTMLDivElement>(null);
+
+  // image store
+  const {
+    previewImage,
+    setPreviewImage,
+    originalImage,
+    setOriginalImage,
+    generatedImage,
+    setGeneratedImage,
+  } = useImageStore((state) => state);
 
   // react-hook-form
   const { register, handleSubmit, formState, watch, setValue, reset } =
@@ -104,7 +106,7 @@ export default function Home() {
         }
       });
     },
-    [setValue]
+    [setPreviewImage, setValue]
   );
 
   useEffect(() => {
