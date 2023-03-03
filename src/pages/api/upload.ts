@@ -1,5 +1,6 @@
 import type { NextApiRequestCloudinary } from "@/types/globals";
 import { cloudinary } from "@/utils/cloudinary";
+import { UploadApiOptions, UploadApiResponse } from "cloudinary";
 import type { NextApiResponse } from "next";
 
 export const config = {
@@ -33,12 +34,19 @@ export default async function handler(
     createdAt: uploadedImage.created_at,
   });
 
-  if (uploadedImage) {
-    setTimeout(async () => {
-      await cloudinary.uploader.destroy(uploadedImage.public_id, {
-        resource_type: "image",
-        invalidate: true,
-      });
-    }, 4 * 60 * 60 * 1000);
-  }
+  // delete images if created more than 4 hours ago
+  const options: UploadApiOptions = {
+    resource_type: "image",
+    type: "upload",
+    prefix: "photo-tweak",
+  };
+  const { resources } = await cloudinary.api.resources(options);
+  const now = new Date();
+  const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+  const imagesToDelete = resources.filter(
+    (image: UploadApiResponse) => new Date(image.created_at) < fourHoursAgo
+  );
+  imagesToDelete.forEach(async (image: UploadApiResponse) => {
+    await cloudinary.uploader.destroy(image.public_id);
+  });
 }

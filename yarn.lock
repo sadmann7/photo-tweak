@@ -175,6 +175,13 @@
     tiny-glob "^0.2.9"
     tslib "^2.4.0"
 
+"@react-email/button@0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@react-email/button/-/button-0.0.6.tgz#3f0b84b03d2253a3a4204312755b65004c021afc"
+  integrity sha512-h0QVT6tZq5sDWbkEUj29VUk18aGzJPZDeeKz0fPJVHpyAgKyVePYrRdQVzIAwLiwzZL8xfZ9yB6jyA1aPgZIoA==
+  dependencies:
+    react "18.2.0"
+
 "@resvg/resvg-wasm@2.4.1":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@resvg/resvg-wasm/-/resvg-wasm-2.4.1.tgz#88f7a08107bf5ea691b016e55e6db955c85d845c"

@@ -130,25 +130,22 @@ export default function Home() {
         }),
       });
 
-      if (!response.ok) {
-        toast.error("Network response was not ok");
+      if (response.status !== 200) {
+        toast.error("Something went wrong");
         setIsUploading(false);
-      }
-      if (response.status === 500) {
-        toast.error("Server error");
+      } else {
+        const uploadedFile: UploadedFile = await response.json();
+        if (!uploadedFile) return;
+        setOriginalImage({
+          name: image.name,
+          url: uploadedFile.secureUrl,
+        });
+        // TODO: remove setGeneratedImage
+        setGeneratedImage(uploadedFile.secureUrl);
         setIsUploading(false);
+        setIsLoading(false);
+        generateImage(uploadedFile.secureUrl, command);
       }
-      const uploadedFile: UploadedFile = await response.json();
-      if (!uploadedFile) return;
-      setOriginalImage({
-        name: image.name,
-        url: uploadedFile.secureUrl,
-      });
-      // TODO: remove setGeneratedImage
-      setGeneratedImage(uploadedFile.secureUrl);
-      setIsUploading(false);
-      setIsLoading(false);
-      generateImage(uploadedFile.secureUrl, command);
     };
   };
 
